@@ -19,54 +19,58 @@ export const configurePassport = () => {
   });
 
   // Google OAuth Strategy
-  passport.use(
-    new GoogleStrategy(
-      {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL,
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          // Check if user already exists with this Google ID
-          let user = await User.findOne({ googleId: profile.id });
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_ID !== 'your-google-client-id') {
+    passport.use(
+      new GoogleStrategy(
+        {
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          callbackURL: process.env.GOOGLE_CALLBACK_URL,
+        },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            // Check if user already exists with this Google ID
+            let user = await User.findOne({ googleId: profile.id });
 
-          if (user) {
-            return done(null, user);
+            if (user) {
+              return done(null, user);
+            }
+
+            // Check if user exists with the same email
+            user = await User.findOne({ email: profile.emails[0].value });
+
+            if (user) {
+              // Link Google account to existing user
+              user.googleId = profile.id;
+              user.authProvider = 'google';
+              user.avatar = profile.photos[0]?.value || '';
+              user.isEmailVerified = true;
+              await user.save();
+              return done(null, user);
+            }
+
+            // Create new user
+            user = await User.create({
+              googleId: profile.id,
+              name: profile.displayName,
+              email: profile.emails[0].value,
+              avatar: profile.photos[0]?.value || '',
+              authProvider: 'google',
+              isEmailVerified: true,
+              phone: '0000000000', // Default phone, can be updated later
+              role: 'customer', // Default role, can be updated
+            });
+
+            done(null, user);
+          } catch (error) {
+            done(error, null);
           }
-
-          // Check if user exists with the same email
-          user = await User.findOne({ email: profile.emails[0].value });
-
-          if (user) {
-            // Link Google account to existing user
-            user.googleId = profile.id;
-            user.authProvider = 'google';
-            user.avatar = profile.photos[0]?.value || '';
-            user.isEmailVerified = true;
-            await user.save();
-            return done(null, user);
-          }
-
-          // Create new user
-          user = await User.create({
-            googleId: profile.id,
-            name: profile.displayName,
-            email: profile.emails[0].value,
-            avatar: profile.photos[0]?.value || '',
-            authProvider: 'google',
-            isEmailVerified: true,
-            phone: '0000000000', // Default phone, can be updated later
-            role: 'customer', // Default role, can be updated
-          });
-
-          done(null, user);
-        } catch (error) {
-          done(error, null);
         }
-      }
-    )
-  );
+      )
+    );
+  } else {
+    console.warn('⚠️ Google OAuth is not configured. Google Login is disabled.');
+  }
 };
 
 export default passport;
