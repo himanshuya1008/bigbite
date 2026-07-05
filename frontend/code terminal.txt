@@ -1,0 +1,4 @@
+npm install
+Now I'll start the development server:
+
+npm run dev

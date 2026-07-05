@@ -1,0 +1,18 @@
+# Ignore local env files in backend and frontend subfolders
+backend/.env
+frontend/.env
+
+# Ignore node_modules in backend and frontend subfolders
+backend/node_modules/
+frontend/node_modules/
+
+# Ignore production builds
+frontend/dist/
+frontend/dist-ssr/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+*.log
+Thumbs.db
