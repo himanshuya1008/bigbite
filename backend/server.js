@@ -39,28 +39,29 @@ const httpServer = createServer(app);
 
 
 console.log('🔧 Current FRONTEND_URL env:', process.env.FRONTEND_URL);
+// Configure allowed CORS origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://bigbitefrontend-sigma.vercel.app",
+  "https://bigbite-sigma.vercel.app"
+];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 // For production, be more permissive with CORS
 // Configure Socket.IO with same CORS as Express
 export const io = new Server(httpServer, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://bigbitefrontend-sigma.vercel.app"
-    ],
+    origin: allowedOrigins,
     credentials: true,
   },
 });
 
-
-
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://bigbitefrontend-sigma.vercel.app"
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
